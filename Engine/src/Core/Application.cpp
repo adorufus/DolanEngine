@@ -3,6 +3,9 @@
 #include "Engine/Core/Input.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Audio/AudioEngine.h"
+#include "Engine/Scripting/ScriptEngine.h"
+#include "Engine/ImGui/ImGuiLayer.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -28,6 +31,12 @@ namespace Engine {
         RenderCommand::Init();
         Renderer2D::Init();
         
+        // Initialize audio
+        AudioEngine::Init();
+        
+        // Initialize scripting
+        ScriptEngine::Init();
+        
         GE_CORE_INFO("Application initialized: {0}", name);
     }
 
@@ -39,6 +48,8 @@ namespace Engine {
         }
         
         Renderer2D::Shutdown();
+        AudioEngine::Shutdown();
+        ScriptEngine::Shutdown();
         GE_CORE_INFO("Application shutting down");
     }
 
@@ -49,9 +60,19 @@ namespace Engine {
 
     void Application::PopLayer() {
         if (!m_Layers.empty()) {
-            m_Layers.back()->OnDetach();
-            delete m_Layers.back();
+            Layer* layer = m_Layers.back();
             m_Layers.pop_back();
+            layer->OnDetach();
+            delete layer;
+        }
+    }
+    
+    void Application::RemoveLayer(Layer* layer) {
+        auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
+        if (it != m_Layers.end()) {
+            layer->OnDetach();
+            m_Layers.erase(it);
+            delete layer;
         }
     }
 
@@ -66,6 +87,9 @@ namespace Engine {
             
             // Update
             if (!m_Minimized) {
+                // Reset renderer stats for this frame
+                Renderer2D::ResetStats();
+                
                 // Clear screen
                 RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
                 RenderCommand::Clear();
@@ -74,6 +98,26 @@ namespace Engine {
                 for (Layer* layer : m_Layers) {
                     layer->OnUpdate(timestep);
                     layer->OnRender();
+                }
+                
+                // ImGui rendering - wrapped properly
+                ImGuiLayer* imguiLayer = nullptr;
+                for (Layer* layer : m_Layers) {
+                    if (auto* imgui = dynamic_cast<ImGuiLayer*>(layer)) {
+                        imguiLayer = imgui;
+                        break;
+                    }
+                }
+                
+                if (imguiLayer) {
+                    imguiLayer->Begin();
+                    
+                    // Render ImGui for all layers
+                    for (Layer* layer : m_Layers) {
+                        layer->OnImGuiRender();
+                    }
+                    
+                    imguiLayer->End();
                 }
             }
             

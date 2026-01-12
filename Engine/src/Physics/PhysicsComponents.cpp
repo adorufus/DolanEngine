@@ -3,6 +3,23 @@
 
 namespace Engine {
 
+    void Rigidbody2DComponent::SetVelocity(const glm::vec2& velocity) {
+        if (RuntimeBody) {
+            b2Body* body = static_cast<b2Body*>(RuntimeBody);
+            body->SetLinearVelocity(b2Vec2(velocity.x, velocity.y));
+        }
+        Velocity = velocity;
+    }
+
+    glm::vec2 Rigidbody2DComponent::GetVelocity() const {
+        if (RuntimeBody) {
+            b2Body* body = static_cast<b2Body*>(RuntimeBody);
+            const auto& vel = body->GetLinearVelocity();
+            return { vel.x, vel.y };
+        }
+        return Velocity;
+    }
+
     void Rigidbody2DComponent::ApplyForce(const glm::vec2& force, const glm::vec2& point, bool wake) {
         if (RuntimeBody) {
             b2Body* body = static_cast<b2Body*>(RuntimeBody);

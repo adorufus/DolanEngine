@@ -112,6 +112,26 @@ namespace Engine {
     }
 
     void Scene::OnPhysics2DUpdate(TimeStep ts) {
+        // Sync kinematic bodies: Transform -> Box2D (before physics step)
+        {
+            auto view = m_Registry.view<TransformComponent, Rigidbody2DComponent>();
+            for (auto e : view) {
+                Entity entity = { e, this };
+                auto& transform = entity.GetComponent<TransformComponent>();
+                auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+                
+                b2Body* body = static_cast<b2Body*>(rb2d.RuntimeBody);
+                
+                // For kinematic bodies, sync transform TO Box2D
+                if (rb2d.Type == Rigidbody2DComponent::BodyType::Kinematic) {
+                    body->SetTransform(
+                        b2Vec2(transform.Position.x, transform.Position.y),
+                        transform.Rotation.z
+                    );
+                }
+            }
+        }
+        
         // Fixed timestep physics
         const int32_t velocityIterations = 6;
         const int32_t positionIterations = 2;
@@ -119,7 +139,7 @@ namespace Engine {
         b2World* world = static_cast<b2World*>(m_PhysicsWorld);
         world->Step(ts, velocityIterations, positionIterations);
         
-        // Retrieve transform from Box2D
+        // Retrieve transform from Box2D (after physics step)
         auto view = m_Registry.view<TransformComponent, Rigidbody2DComponent>();
         for (auto e : view) {
             Entity entity = { e, this };
@@ -127,12 +147,16 @@ namespace Engine {
             auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
             
             b2Body* body = static_cast<b2Body*>(rb2d.RuntimeBody);
-            const auto& position = body->GetPosition();
-            transform.Position.x = position.x;
-            transform.Position.y = position.y;
-            transform.Rotation.z = body->GetAngle();
             
-            // Update velocity in component
+            // For dynamic bodies, sync transform FROM Box2D
+            if (rb2d.Type == Rigidbody2DComponent::BodyType::Dynamic) {
+                const auto& position = body->GetPosition();
+                transform.Position.x = position.x;
+                transform.Position.y = position.y;
+                transform.Rotation.z = body->GetAngle();
+            }
+            
+            // Update velocity in component (for all body types)
             const auto& velocity = body->GetLinearVelocity();
             rb2d.Velocity = { velocity.x, velocity.y };
             rb2d.AngularVelocity = body->GetAngularVelocity();

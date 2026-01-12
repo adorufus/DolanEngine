@@ -14,24 +14,29 @@ namespace Engine {
         
         template<typename T, typename... Args>
         T& AddComponent(Args&&... args) {
+            GE_CORE_ASSERT(m_Scene, "Entity has no scene!");
             GE_CORE_ASSERT(!HasComponent<T>(), "Entity already has component!");
             T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+            m_Scene->OnComponentAdded<T>(*this, component);
             return component;
         }
         
         template<typename T>
         T& GetComponent() {
+            GE_CORE_ASSERT(m_Scene, "Entity has no scene!");
             GE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
             return m_Scene->m_Registry.get<T>(m_EntityHandle);
         }
         
         template<typename T>
         bool HasComponent() {
+            if (!m_Scene) return false;
             return m_Scene->m_Registry.all_of<T>(m_EntityHandle);
         }
         
         template<typename T>
         void RemoveComponent() {
+            GE_CORE_ASSERT(m_Scene, "Entity has no scene!");
             GE_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
             m_Scene->m_Registry.remove<T>(m_EntityHandle);
         }

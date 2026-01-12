@@ -13,3 +13,6 @@
 [submodule "Vendor/yaml-cpp"]
 	path = Vendor/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "Vendor/lua"]
+	path = Vendor/lua
+	url = https://github.com/lua/lua.git

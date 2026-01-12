@@ -21,6 +21,7 @@ namespace Engine {
         
         void PushLayer(Layer* layer);
         void PopLayer();
+        void RemoveLayer(Layer* layer);
         
         Window& GetWindow() { return *m_Window; }
         

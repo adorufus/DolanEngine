@@ -28,6 +28,14 @@ namespace Engine {
         Rigidbody2DComponent() = default;
         Rigidbody2DComponent(BodyType type) : Type(type) {}
         
+        // Velocity control
+        void SetVelocity(const glm::vec2& velocity);
+        glm::vec2 GetVelocity() const;
+        
+        // Angle control (rotation in radians)
+        void SetAngle(float angle);
+        float GetAngle() const;
+        
         // Apply force
         void ApplyForce(const glm::vec2& force, const glm::vec2& point, bool wake = true);
         void ApplyForceToCenter(const glm::vec2& force, bool wake = true);

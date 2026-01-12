@@ -43,3 +43,6 @@ set(BOX2D_BUILD_TESTBED OFF CACHE BOOL "" FORCE)
 set(BOX2D_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 add_subdirectory(box2d)
 
+# Dear ImGui
+add_subdirectory(imgui)
+

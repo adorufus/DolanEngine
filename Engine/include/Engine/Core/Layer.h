@@ -15,6 +15,7 @@ namespace Engine {
         virtual void OnDetach() {}
         virtual void OnUpdate(TimeStep ts) {}
         virtual void OnRender() {}
+        virtual void OnImGuiRender() {}
         virtual void OnEvent(Event& event) {}
         
         const std::string& GetName() const { return m_DebugName; }

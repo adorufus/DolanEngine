@@ -1,187 +1,161 @@
 #include <Engine.h>
-#include <cmath>
-#include <random>
 
-class PhysicsSandboxLayer : public Engine::Layer {
+class GameLayer : public Engine::Layer {
 public:
-    PhysicsSandboxLayer()
-        : Layer("PhysicsSandbox") {
-        GE_INFO("PhysicsSandboxLayer initialized with Box2D Physics!");
-        
+    GameLayer() : Layer("GameLayer") {}
+
+    void OnAttach() override {
         // Create scene
-        m_Scene = Engine::CreateRef<Engine::Scene>("Physics Demo Scene");
-        m_Scene->SetGravity({0.0f, -9.81f});
+        m_Scene = Engine::CreateRef<Engine::Scene>("Scripting Demo");
         
         // Create camera
-        auto cameraEntity = m_Scene->CreateEntity("Camera");
-        auto& camera = cameraEntity.AddComponent<Engine::CameraComponent>();
-        camera.Camera.SetProjection(-16.0f, 16.0f, -9.0f, 9.0f);
-        camera.Primary = true;
+        auto camera = m_Scene->CreateEntity("Camera");
+        auto& cameraComp = camera.AddComponent<Engine::CameraComponent>();
+        cameraComp.Camera.SetProjection(-16.0f, 16.0f, -9.0f, 9.0f);
+        cameraComp.Primary = true;
         
-        // Create ground (static body)
-        auto ground = m_Scene->CreateEntity("Ground");
-        auto& groundTransform = ground.GetComponent<Engine::TransformComponent>();
-        groundTransform.Position = { 0.0f, -8.0f, 0.0f };
-        groundTransform.Scale = { 15.0f, 1.0f, 1.0f };
+        // Create player entity with Lua script
+        m_Player = m_Scene->CreateEntity("Player");
+        auto& playerTransform = m_Player.GetComponent<Engine::TransformComponent>();
+        playerTransform.Position = { 0.0f, 0.0f, 0.0f };
+        playerTransform.Scale = { 1.0f, 1.0f, 1.0f };
         
-        auto& groundSprite = ground.AddComponent<Engine::SpriteRendererComponent>();
-        groundSprite.Color = { 0.3f, 0.3f, 0.3f, 1.0f };
+        auto& playerSprite = m_Player.AddComponent<Engine::SpriteRendererComponent>();
+        playerSprite.Color = { 0.3f, 0.7f, 1.0f, 1.0f };
         
-        auto& groundRB = ground.AddComponent<Engine::Rigidbody2DComponent>();
-        groundRB.Type = Engine::Rigidbody2DComponent::BodyType::Static;
+        auto& playerRb = m_Player.AddComponent<Engine::Rigidbody2DComponent>();
+        playerRb.Type = Engine::Rigidbody2DComponent::BodyType::Dynamic;
+        playerRb.FixedRotation = true;
         
-        auto& groundCollider = ground.AddComponent<Engine::BoxCollider2DComponent>();
-        groundCollider.Size = { 15.0f, 1.0f };
+        auto& playerCollider = m_Player.AddComponent<Engine::BoxCollider2DComponent>();
+        playerCollider.Size = { 0.4f, 0.4f };  // Half-extents
         
-        // Create walls
-        CreateWall("Left Wall", {-15.0f, 0.0f, 0.0f}, {1.0f, 10.0f, 1.0f});
-        CreateWall("Right Wall", {15.0f, 0.0f, 0.0f}, {1.0f, 10.0f, 1.0f});
+        // Attach Lua script to player
+        auto& playerScript = m_Player.AddComponent<Engine::ScriptComponent>();
+        playerScript.ScriptPath = "assets/scripts/PlayerController.lua";
         
-        // Create falling boxes
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> colorDist(0.3, 1.0);
-        std::uniform_real_distribution<> xDist(-10.0, 10.0);
+        // Create enemy with AI script
+        auto enemy = m_Scene->CreateEntity("Enemy");
+        auto& enemyTransform = enemy.GetComponent<Engine::TransformComponent>();
+        enemyTransform.Position = { 5.0f, 0.0f, 0.0f };
+        enemyTransform.Scale = { 1.0f, 1.0f, 1.0f };
         
-        for (int i = 0; i < 20; i++) {
-            auto box = m_Scene->CreateEntity("Box");
-            auto& transform = box.GetComponent<Engine::TransformComponent>();
-            transform.Position = { xDist(gen), 5.0f + i * 1.5f, 0.0f };
-            transform.Scale = { 0.8f, 0.8f, 1.0f };
-            
-            auto& sprite = box.AddComponent<Engine::SpriteRendererComponent>();
-            sprite.Color = { 
-                colorDist(gen), 
-                colorDist(gen), 
-                colorDist(gen), 
-                1.0f 
-            };
-            
-            auto& rb = box.AddComponent<Engine::Rigidbody2DComponent>();
-            rb.Type = Engine::Rigidbody2DComponent::BodyType::Dynamic;
-            rb.Mass = 1.0f;
-            
-            auto& collider = box.AddComponent<Engine::BoxCollider2DComponent>();
-            collider.Size = { 0.4f, 0.4f };
-            collider.Density = 1.0f;
-            collider.Friction = 0.5f;
-            collider.Restitution = 0.3f; // Bouncy!
-        }
+        auto& enemySprite = enemy.AddComponent<Engine::SpriteRendererComponent>();
+        enemySprite.Color = { 1.0f, 0.3f, 0.3f, 1.0f };
         
-        // Create some circles
-        for (int i = 0; i < 10; i++) {
-            auto circle = m_Scene->CreateEntity("Circle");
-            auto& transform = circle.GetComponent<Engine::TransformComponent>();
-            transform.Position = { xDist(gen), 10.0f + i * 1.5f, 0.0f };
-            transform.Scale = { 0.6f, 0.6f, 1.0f };
-            
-            auto& sprite = circle.AddComponent<Engine::SpriteRendererComponent>();
-            sprite.Color = { 
-                colorDist(gen), 
-                colorDist(gen), 
-                colorDist(gen), 
-                1.0f 
-            };
-            
-            auto& rb = circle.AddComponent<Engine::Rigidbody2DComponent>();
-            rb.Type = Engine::Rigidbody2DComponent::BodyType::Dynamic;
-            
-            auto& collider = circle.AddComponent<Engine::CircleCollider2DComponent>();
-            collider.Radius = 0.3f;
-            collider.Density = 0.8f;
-            collider.Friction = 0.3f;
-            collider.Restitution = 0.5f; // More bouncy!
-        }
+        auto& enemyRb = enemy.AddComponent<Engine::Rigidbody2DComponent>();
+        enemyRb.Type = Engine::Rigidbody2DComponent::BodyType::Dynamic;
+        enemyRb.FixedRotation = true;
         
-        // Create a platform (kinematic body)
-        m_Platform = m_Scene->CreateEntity("Platform");
-        auto& platformTransform = m_Platform.GetComponent<Engine::TransformComponent>();
-        platformTransform.Position = { 0.0f, 0.0f, 0.0f };
+        auto& enemyCollider = enemy.AddComponent<Engine::BoxCollider2DComponent>();
+        enemyCollider.Size = { 0.4f, 0.4f };  // Half-extents
+        
+        // Attach AI script to enemy
+        auto& enemyScript = enemy.AddComponent<Engine::ScriptComponent>();
+        enemyScript.ScriptPath = "assets/scripts/EnemyAI.lua";
+        
+        // Create rotating platform
+        auto platform = m_Scene->CreateEntity("Rotating Platform");
+        auto& platformTransform = platform.GetComponent<Engine::TransformComponent>();
+        platformTransform.Position = { 0.0f, -3.0f, 0.0f };
         platformTransform.Scale = { 4.0f, 0.5f, 1.0f };
         
-        auto& platformSprite = m_Platform.AddComponent<Engine::SpriteRendererComponent>();
-        platformSprite.Color = { 0.8f, 0.6f, 0.2f, 1.0f };
+        auto& platformSprite = platform.AddComponent<Engine::SpriteRendererComponent>();
+        platformSprite.Color = { 0.8f, 0.8f, 0.2f, 1.0f };
         
-        auto& platformRB = m_Platform.AddComponent<Engine::Rigidbody2DComponent>();
-        platformRB.Type = Engine::Rigidbody2DComponent::BodyType::Kinematic;
+        auto& platformRb = platform.AddComponent<Engine::Rigidbody2DComponent>();
+        platformRb.Type = Engine::Rigidbody2DComponent::BodyType::Kinematic;
+        platformRb.GravityScale = 0.0f;  // No gravity on kinematic bodies
         
-        auto& platformCollider = m_Platform.AddComponent<Engine::BoxCollider2DComponent>();
-        platformCollider.Size = { 4.0f, 0.5f };
+        auto& platformCollider = platform.AddComponent<Engine::BoxCollider2DComponent>();
+        platformCollider.Size = { 0.5f, 0.125f };  // Half-extents (will be multiplied by scale 4x0.5 = 2x0.25 actual size)
         
-        GE_INFO("Created 33 entities with physics!");
+        // Attach rotator script
+        auto& platformScript = platform.AddComponent<Engine::ScriptComponent>();
+        platformScript.ScriptPath = "assets/scripts/Rotator.lua";
+        
+        // Create ground
+        auto ground = m_Scene->CreateEntity("Ground");
+        auto& groundTransform = ground.GetComponent<Engine::TransformComponent>();
+        groundTransform.Position = { 0.0f, -5.0f, 0.0f };
+        groundTransform.Scale = { 20.0f, 1.0f, 1.0f };
+        
+        auto& groundSprite = ground.AddComponent<Engine::SpriteRendererComponent>();
+        groundSprite.Color = { 0.5f, 0.5f, 0.5f, 1.0f };
+        
+        auto& groundRb = ground.AddComponent<Engine::Rigidbody2DComponent>();
+        groundRb.Type = Engine::Rigidbody2DComponent::BodyType::Static;
+        
+        auto& groundCollider = ground.AddComponent<Engine::BoxCollider2DComponent>();
+        groundCollider.Size = { 0.5f, 0.5f };  // Half-extents (will be multiplied by scale: 0.5*20=10 wide, 0.5*1=0.5 tall)
         
         // Start scene
         m_Scene->OnStart();
         
-        GE_INFO("Controls: ESC to exit, SPACE to spawn box");
-        GE_INFO("Box2D Physics: {} bodies created", 33);
+        // Initialize script reloader
+        Engine::ScriptReloader::Init();
+        Engine::ScriptReloader::WatchScript("assets/scripts/PlayerController.lua");
+        Engine::ScriptReloader::WatchScript("assets/scripts/EnemyAI.lua");
+        Engine::ScriptReloader::WatchScript("assets/scripts/Rotator.lua");
+        
+        // Setup reload callback
+        Engine::ScriptReloader::SetReloadCallback([this](const std::string& path) {
+            GE_CORE_INFO("Script reloaded, restarting scene...");
+            m_Scene->OnStop();
+            m_Scene->OnStart();
+        });
+        
+        GE_CORE_INFO("=== Lua Scripting Demo ===");
+        GE_CORE_INFO("Controls:");
+        GE_CORE_INFO("  WASD - Move player");
+        GE_CORE_INFO("  SPACE - Jump");
+        GE_CORE_INFO("  E - Change player color");
+        GE_CORE_INFO("  R - Reset player position");
+        GE_CORE_INFO("  F5 - Reload scripts (hot-reload)");
+        GE_CORE_INFO("========================");
     }
-    
-    ~PhysicsSandboxLayer() {
+
+    void OnDetach() override {
         m_Scene->OnStop();
-        GE_INFO("PhysicsSandboxLayer destroyed!");
+        Engine::ScriptReloader::Shutdown();
     }
-    
-    void CreateWall(const std::string& name, const glm::vec3& pos, const glm::vec3& scale) {
-        auto wall = m_Scene->CreateEntity(name);
-        auto& transform = wall.GetComponent<Engine::TransformComponent>();
-        transform.Position = pos;
-        transform.Scale = scale;
-        
-        auto& sprite = wall.AddComponent<Engine::SpriteRendererComponent>();
-        sprite.Color = { 0.4f, 0.4f, 0.4f, 1.0f };
-        
-        auto& rb = wall.AddComponent<Engine::Rigidbody2DComponent>();
-        rb.Type = Engine::Rigidbody2DComponent::BodyType::Static;
-        
-        auto& collider = wall.AddComponent<Engine::BoxCollider2DComponent>();
-        collider.Size = { scale.x, scale.y };
-    }
-    
+
     void OnUpdate(Engine::TimeStep ts) override {
-        m_Time += ts;
-        
-        // Move platform
-        if (m_Platform) {
-            auto& transform = m_Platform.GetComponent<Engine::TransformComponent>();
-            transform.Position.x = 8.0f * std::sin(m_Time * 0.5f);
-            transform.Position.y = 2.0f * std::sin(m_Time * 1.0f);
+        // Check for manual script reload
+        if (Engine::Input::IsKeyPressed(Engine::KeyCode::F5)) {
+            GE_CORE_INFO("Manual script reload triggered!");
+            m_Scene->OnStop();
+            m_Scene->OnStart();
         }
+        
+        // Check for hot-reload changes
+        Engine::ScriptReloader::CheckForChanges();
         
         // Update scene
         m_Scene->OnUpdate(ts);
         
-        // Stats
-        if (m_Time - m_LastStatsTime > 2.0f) {
-            auto stats = Engine::Renderer2D::GetStats();
-            GE_INFO("Renderer - DrawCalls: {}, Quads: {}", stats.DrawCalls, stats.QuadCount);
-            m_LastStatsTime = m_Time;
-        }
-    }
-    
-    void OnRender() override {
+        // Render scene
+        Engine::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.15f, 1.0f });
+        Engine::RenderCommand::Clear();
+        
         m_Scene->OnRender();
-        Engine::Renderer2D::ResetStats();
     }
-    
+
     void OnEvent(Engine::Event& event) override {
-        // Future: spawn boxes on key press
+        // Handle events if needed
     }
-    
+
 private:
     Engine::Ref<Engine::Scene> m_Scene;
-    Engine::Entity m_Platform;
-    float m_Time = 0.0f;
-    float m_LastStatsTime = 0.0f;
+    Engine::Entity m_Player;
 };
 
 class SandboxApp : public Engine::Application {
 public:
-    SandboxApp()
-        : Application("Sandbox - 2D Physics with Box2D") {
-        PushLayer(new PhysicsSandboxLayer());
+    SandboxApp() : Application("Lua Scripting Demo") {
+        PushLayer(new GameLayer());
     }
-    
+
     ~SandboxApp() = default;
 };
 

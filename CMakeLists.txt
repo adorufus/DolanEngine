@@ -24,3 +24,6 @@ add_subdirectory(Engine)
 # Sandbox application
 add_subdirectory(Sandbox)
 
+# Editor application
+add_subdirectory(Editor)
+
