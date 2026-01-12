@@ -1,0 +1,41 @@
+# Build directories
+build/
+bin/
+lib/
+cmake-build-*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.out
+*.app
+*.dylib
+*.so
+*.dll
+*.a
+*.lib
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Vendor (if using submodules)
+# Uncomment if you want to ignore vendor directories
+# Vendor/*/
+
