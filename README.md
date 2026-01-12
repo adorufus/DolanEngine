@@ -117,19 +117,46 @@ Editor.exe
 
 ## 📚 **Documentation**
 
-- **[Quick Start Guide](QUICKSTART.md)** - Get started in 5 minutes
-- **[Architecture Overview](ARCHITECTURE.md)** - Engine design and structure
-- **[Setup Guide](SETUP.md)** - Detailed installation instructions
-- **[Project Summary](PROJECT_SUMMARY.md)** - High-level overview
-- **[Roadmap](ROADMAP.md)** - Development phases and features
+> 📖 **[DOCUMENTATION INDEX](DOCUMENTATION_INDEX.md)** - Complete guide to all documentation
 
-### **Phase Documentation**
-- [Phase 1-4: Foundation](PHASE1-4_SUMMARY.md)
+### **🚀 New Users Start Here!**
+
+1. **[USER_GUIDE.md](USER_GUIDE.md)** ⭐ - **Complete user manual** (Everything you need!)
+2. **[FAQ.md](FAQ.md)** ❓ - Frequently asked questions
+3. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** ⚡ - One-page cheat sheet
+4. **[API_REFERENCE.md](API_REFERENCE.md)** 📚 - Complete API documentation
+
+### **Essential Guides**
+- 📖 **[User Guide](USER_GUIDE.md)** - **START HERE!** Complete guide for using the engine
+- ⚡ **[Quick Reference](QUICK_REFERENCE.md)** - One-page cheat sheet for common tasks
+- 📚 **[API Reference](API_REFERENCE.md)** - Complete Lua and C++ API documentation
+- 🚀 **[Quick Start Guide](QUICKSTART.md)** - Get started in 5 minutes
+- 🏗️ **[Architecture Overview](ARCHITECTURE.md)** - Engine design and structure
+
+### **Getting Started**
+- **[Setup Guide](SETUP.md)** - Detailed installation instructions
+- **[Build Instructions](BUILD.md)** - Comprehensive build guide
+- **[Project Summary](PROJECT_SUMMARY.md)** - High-level overview
+
+### **Game Development Tutorials**
+- 🎮 **[Game Shooter Plan](GAME_SHOOTER_PLAN.md)** - Top-down shooter design document
+- 🔫 **[Shooter Build Guide](SHOOTER_BUILD_GUIDE.md)** - Step-by-step game creation
+
+### **Development Documentation**
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
+- **[Changelog](CHANGELOG.md)** - Version history and changes
+- **[Roadmap](ROADMAP.md)** - Development phases and future features
+
+### **Phase Documentation** (Development History)
+- [Phase 2: Rendering](PHASE2_COMPLETE.md)
+- [Phase 3: ECS & Scene](PHASE3_COMPLETE.md)
+- [Phase 4: Physics](PHASE4_COMPLETE.md)
 - [Phase 5: Advanced Rendering](PHASE5_COMPLETE.md)
 - [Phase 6: Audio System](PHASE6_COMPLETE.md)
 - [Phase 7: Scripting](PHASE7_COMPLETE.md)
 - [Phase 8: Editor & Tools](PHASE8_COMPLETE.md)
 - [Phase 9: Optimization](PHASE9_COMPLETE.md)
+- [Phase 10: Polish & Release](PHASE10_COMPLETE.md)
 
 ---
 
